@@ -1,0 +1,25 @@
+$font-family-primary: Arial, Helvetica, sans-serif;
+$font-family-secondary: "Courier New", Courier, monospace;
+
+$font-weights: (
+    "regular": 400,
+    "medium": 500,
+    "semibold": 600,
+    "bold": 700,
+);
+
+$colors: (
+    "primary": hsl(217, 100%, 30%),
+    "secondary": hsl(217, 100%, 50%),
+    "background": hsl(217, 100%, 80%),
+);
+
+$breakpoints: (
+    "small": 23.4375em /* 375px */,
+    "medium": 48em /* 768px */,
+    "large": 62em /* 992px */,
+    "x-large": 75em /* 1200px */,
+    "max-width": 90em /* 1440px */,
+);
+
+$max-width: map-get($breakpoints, "max-width");

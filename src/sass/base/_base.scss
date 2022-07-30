@@ -1,0 +1,18 @@
+@use "../abstracts" as *;
+
+html {
+    font-size: 100%;
+}
+
+body {
+    font-size: rem(16);
+    font-family: $font-family-primary;
+    font-weight: weight("regular");
+    color: color("primary");
+    background-color: color("background");
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+}

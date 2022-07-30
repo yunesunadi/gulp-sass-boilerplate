@@ -1,0 +1,39 @@
+@use "variables" as *;
+@use "functions" as *;
+
+@mixin media-query($value) {
+    $size: null;
+    @if type-of($value) == string {
+        $size: validate-key($breakpoints, $value);
+    } @else {
+        $size: not-unitless($value);
+    }
+    @media (min-width: $size) {
+        @content;
+    }
+}
+
+@mixin pseudo(
+    $element,
+    $content: "",
+    $position: absolute,
+    $top: null,
+    $right: null,
+    $bottom: null,
+    $left: null
+) {
+    @if $element == "before" or $element == "after" {
+        position: relative;
+        &::#{$element} {
+            content: $content;
+            position: $position;
+            top: not-unitless-and-string($top);
+            right: not-unitless-and-string($right);
+            bottom: not-unitless-and-string($bottom);
+            left: not-unitless-and-string($left);
+            @content;
+        }
+    } @else {
+        @error "Pseudo element must be 'before' or 'after'.";
+    }
+}

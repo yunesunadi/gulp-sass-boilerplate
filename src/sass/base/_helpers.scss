@@ -1,0 +1,10 @@
+@use "../abstracts" as *;
+
+.container {
+    max-width: $max-width;
+    margin: {
+        left: auto;
+        right: auto;
+    }
+    padding: rem(20);
+}

@@ -1,0 +1,56 @@
+@use "sass:math";
+@use "variables" as *;
+
+@function validate-key($map, $key) {
+    @if map-has-key($map, $key) {
+        @return map-get($map, $key);
+    }
+    @error "The key #{inspect($key)} doesn't exist in the map.";
+}
+
+@function color($name) {
+    @return validate-key($colors, $name);
+}
+
+@function weight($name) {
+    @return validate-key($font-weights, $name);
+}
+
+@function check-error($pixels, $base-font-size, $multiplier) {
+    @if type-of($pixels) == number {
+        @if unitless($pixels) {
+            @return (math.div($pixels, $base-font-size)) * $multiplier;
+        }
+        @error "Value must be unitless.";
+    }
+    @error "Value must be a number.";
+}
+
+@function rem($pixels, $base-font-size: 16) {
+    @return check-error($pixels, $base-font-size, 1rem);
+}
+
+@function em($pixels, $base-font-size: 16) {
+    @return check-error($pixels, $base-font-size, 1em);
+}
+
+@function not-string($value) {
+    @if type-of($value) != string {
+        @return $value;
+    }
+    @error "Value must not be a string.";
+}
+
+@function not-unitless($value) {
+    @if not unitless($value) {
+        @return $value;
+    }
+    @error "Value must have unit.";
+}
+
+@function not-unitless-and-string($value) {
+    @if $value {
+        @return not-unitless(not-string($value));
+    }
+    @return null;
+}
