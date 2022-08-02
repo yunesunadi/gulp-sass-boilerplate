@@ -4,14 +4,14 @@ const postcss = require("gulp-postcss");
 const autoprefixer = require("autoprefixer");
 const cssnano = require("cssnano");
 const babel = require("gulp-babel");
-const concat = require("gulp-concat");
 const uglify = require("gulp-uglify");
 const imagemin = require("gulp-imagemin");
 const { gifsicle, mozjpeg, optipng, svgo } = require("gulp-imagemin");
 const replace = require("gulp-replace");
 const { init, reload } = require("browser-sync").create();
 
-const { sassPath, jsPath, imgPath } = {
+const { htmlPath, sassPath, jsPath, imgPath } = {
+    htmlPath: "./*.html",
     sassPath: "./src/sass/**/*.scss",
     jsPath: "./src/js/**/*.js",
     imgPath: "./src/assets/images/**/*.{png,jpg,gif,svg}",
@@ -31,7 +31,6 @@ function jsTask() {
                 presets: ["@babel/preset-env"],
             })
         )
-        .pipe(concat("scripts.js"))
         .pipe(uglify())
         .pipe(dest("./dist/js", { sourcemaps: "." }));
 }
@@ -67,7 +66,7 @@ function imgTask() {
 
 function cacheBustTask() {
     const str = new Date().getTime();
-    return src("./index.html")
+    return src(htmlPath)
         .pipe(replace(/cb=\d+/g, "cb=" + str))
         .pipe(dest("./"));
 }
@@ -87,7 +86,7 @@ function browserSyncReload(cb) {
 }
 
 function watchTask() {
-    watch("./index.html", series(browserSyncReload));
+    watch(htmlPath, series(browserSyncReload));
     watch(sassPath, series(sassTask, cacheBustTask));
     watch(jsPath, series(jsTask, cacheBustTask));
     watch(imgPath, series(imgTask, browserSyncReload));
