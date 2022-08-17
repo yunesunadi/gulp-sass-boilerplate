@@ -3,17 +3,21 @@ const sass = require("gulp-sass")(require("sass"));
 const postcss = require("gulp-postcss");
 const autoprefixer = require("autoprefixer");
 const cssnano = require("cssnano");
-const babel = require("gulp-babel");
 const uglify = require("gulp-uglify");
 const imagemin = require("gulp-imagemin");
 const { gifsicle, mozjpeg, optipng, svgo } = require("gulp-imagemin");
 const replace = require("gulp-replace");
 const { init, reload } = require("browser-sync").create();
+const browserify = require("browserify");
+const babelify = require("babelify");
+const source = require("vinyl-source-stream");
+const buffer = require("vinyl-buffer");
 
-const { htmlPath, sassPath, jsPath, imgPath } = {
+const { htmlPath, sassPath, jsTaskPath, jsWatchPath, imgPath } = {
     htmlPath: "./*.html",
     sassPath: "./src/sass/**/*.scss",
-    jsPath: "./src/js/**/*.js",
+    jsTaskPath: "./src/js/script.js",
+    jsWatchPath: "./src/js/**/*.js",
     imgPath: "./src/assets/images/**/*.{png,jpg,gif,svg}",
 };
 
@@ -25,14 +29,13 @@ function sassTask() {
 }
 
 function jsTask() {
-    return src(jsPath, { sourcemaps: true })
-        .pipe(
-            babel({
-                presets: ["@babel/preset-env"],
-            })
-        )
+    return browserify(jsTaskPath)
+        .transform(babelify, { presets: ["@babel/preset-env"] })
+        .bundle()
+        .pipe(source("bundle.js"))
+        .pipe(buffer())
         .pipe(uglify())
-        .pipe(dest("./dist/js", { sourcemaps: "." }));
+        .pipe(dest("dist/js"));
 }
 
 function imgTask() {
@@ -88,7 +91,7 @@ function browserSyncReload(cb) {
 function watchTask() {
     watch(htmlPath, series(browserSyncReload));
     watch(sassPath, series(sassTask, cacheBustTask));
-    watch(jsPath, series(jsTask, cacheBustTask));
+    watch(jsWatchPath, series(jsTask, cacheBustTask));
     watch(imgPath, series(imgTask, browserSyncReload));
 }
 
