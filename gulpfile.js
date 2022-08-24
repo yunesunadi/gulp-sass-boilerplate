@@ -79,6 +79,8 @@ function browserSyncTask(cb) {
         server: {
             baseDir: "./",
         },
+        tunnel: "my-private-site",
+        online: true,
     });
     cb();
 }
