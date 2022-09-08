@@ -79,6 +79,7 @@ function browserSyncTask(cb) {
         server: {
             baseDir: "./",
         },
+        port: 8080,
         tunnel: "my-private-site",
         online: true,
     });
