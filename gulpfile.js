@@ -7,38 +7,74 @@ const uglify = require("gulp-uglify");
 const imagemin = require("gulp-imagemin");
 const { gifsicle, mozjpeg, optipng, svgo } = require("gulp-imagemin");
 const replace = require("gulp-replace");
+const clean = require("gulp-clean");
 const { init, reload } = require("browser-sync").create();
 const browserify = require("browserify");
 const babelify = require("babelify");
 const source = require("vinyl-source-stream");
 const buffer = require("vinyl-buffer");
 
-const { htmlPath, sassPath, jsTaskPath, jsWatchPath, imgPath } = {
-    htmlPath: "./*.html",
-    sassPath: "./src/sass/**/*.scss",
-    jsTaskPath: "./src/js/script.js",
-    jsWatchPath: "./src/js/**/*.js",
-    imgPath: "./src/assets/images/**/*.{png,jpg,gif,svg}",
-};
+const htmlPath = "./*.html",
+    sassPath = "./src/sass/**/*.scss",
+    jsTaskHomePath = ["./src/js/home.js", "home.js"],
+    jsTaskAboutPath = ["./src/js/about.js", "about.js"],
+    jsWatchPath = "./src/js/**/*.js",
+    imgPath = "./src/assets/images/**/*.{png,jpg,gif,svg}",
+    imgCleanPath = "./dist/assets/images";
 
-function sassTask() {
+function sassDevTask() {
     return src(sassPath, { sourcemaps: true })
         .pipe(sass().on("error", sass.logError))
-        .pipe(postcss([autoprefixer(), cssnano()]))
         .pipe(dest("./dist/css", { sourcemaps: "." }));
 }
 
-function jsTask() {
+function sassProdTask() {
+    return src(sassPath)
+        .pipe(sass())
+        .pipe(postcss([autoprefixer(), cssnano()]))
+        .pipe(dest("./dist/css"));
+}
+
+function jsDevTask([jsTaskPath, jsSourcePath]) {
     return browserify(jsTaskPath)
         .transform(babelify, { presets: ["@babel/preset-env"] })
         .bundle()
-        .pipe(source("bundle.js"))
+        .pipe(source(jsSourcePath))
         .pipe(buffer())
-        .pipe(uglify())
-        .pipe(dest("dist/js"));
+        .pipe(dest("./dist/js"));
 }
 
-function imgTask() {
+function jsDevHomeTask() {
+    return jsDevTask(jsTaskHomePath);
+}
+
+function jsDevAboutTask() {
+    return jsDevTask(jsTaskAboutPath);
+}
+
+function jsProdTask([jsTaskPath, jsSourcePath]) {
+    return browserify(jsTaskPath)
+        .transform(babelify, { presets: ["@babel/preset-env"] })
+        .bundle()
+        .pipe(source(jsSourcePath))
+        .pipe(buffer())
+        .pipe(uglify())
+        .pipe(dest("./dist/js"));
+}
+
+function jsProdHomeTask() {
+    return jsProdTask(jsTaskHomePath);
+}
+
+function jsProdAboutTask() {
+    return jsProdTask(jsTaskAboutPath);
+}
+
+function imgDevTask() {
+    return src(imgPath).pipe(dest("./dist/assets/images"));
+}
+
+function imgProdTask() {
     return src(imgPath)
         .pipe(
             imagemin(
@@ -67,6 +103,12 @@ function imgTask() {
         .pipe(dest("./dist/assets/images"));
 }
 
+function imgCleanTask() {
+    return src(imgCleanPath, { read: false, allowEmpty: true }).pipe(
+        clean({ force: true })
+    );
+}
+
 function cacheBustTask() {
     const str = new Date().getTime();
     return src(htmlPath)
@@ -93,17 +135,27 @@ function browserSyncReload(cb) {
 
 function watchTask() {
     watch(htmlPath, series(browserSyncReload));
-    watch(sassPath, series(sassTask, cacheBustTask));
-    watch(jsWatchPath, series(jsTask, cacheBustTask));
-    watch(imgPath, series(imgTask, browserSyncReload));
+    watch(sassPath, series(sassDevTask, cacheBustTask));
+    watch(
+        jsWatchPath,
+        series(parallel(jsDevHomeTask, jsDevAboutTask), cacheBustTask)
+    );
+    watch(imgPath, series(imgCleanTask, imgDevTask, browserSyncReload));
 }
 
 exports.default = series(
-    parallel(sassTask, jsTask),
-    imgTask,
+    sassDevTask,
+    parallel(jsDevHomeTask, jsDevAboutTask),
+    imgDevTask,
     cacheBustTask,
     browserSyncTask,
     watchTask
 );
 
-exports.build = series(parallel(sassTask, jsTask), imgTask, cacheBustTask);
+exports.build = series(
+    sassProdTask,
+    parallel(jsProdHomeTask, jsProdAboutTask),
+    imgCleanTask,
+    imgProdTask,
+    cacheBustTask
+);
